@@ -15,7 +15,6 @@ export default function TableSizeSelector({ maxRows, maxCols, onSelect, predefin
   useEffect(() => {
     if (predefinedSize) {
       setSelectedDimensions(predefinedSize)
-      onSelect(predefinedSize.rows, predefinedSize.cols)
     }
   }, [predefinedSize, onSelect])
 

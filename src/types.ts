@@ -118,6 +118,8 @@ export type Operation = {
 }
 
 export type DataSheetGridProps<T> = {
+  autoRows?: boolean
+  autoColumns?: boolean
   value?: T[]
   style?: React.CSSProperties
   className?: string

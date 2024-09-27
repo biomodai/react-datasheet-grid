@@ -1,5 +1,7 @@
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
+import cx from 'classnames'
 import React, { ReactNode, RefObject, useEffect } from 'react'
+import { useMemoizedIndexCallback } from '../hooks/useMemoizedIndexCallback'
 import {
   Cell,
   Column,
@@ -7,9 +9,7 @@ import {
   DataSheetGridProps,
   Selection,
 } from '../types'
-import cx from 'classnames'
 import { Cell as CellComponent } from './Cell'
-import { useMemoizedIndexCallback } from '../hooks/useMemoizedIndexCallback'
 
 export const Grid = <T extends any>({
   data,
@@ -95,6 +95,7 @@ export const Grid = <T extends any>({
     horizontal: true,
     getItemKey: (index: number): React.Key => columns[index].id ?? index,
     overscan: 1,
+
     rangeExtractor: (range) => {
       const result = defaultRangeExtractor(range)
       if (result[0] !== 0) {
@@ -111,8 +112,9 @@ export const Grid = <T extends any>({
   })
 
   useEffect(() => {
-    colVirtualizer.measure()
-  }, [colVirtualizer, columnWidths])
+    colVirtualizer.measure();
+    console.log('measuring!', columns.length, colVirtualizer.getTotalSize())
+  }, [colVirtualizer, columnWidths, columns.length])
 
   const setGivenRowData = useMemoizedIndexCallback(setRowData, 1)
   const deleteGivenRow = useMemoizedIndexCallback(deleteRows, 0)
@@ -129,7 +131,7 @@ export const Grid = <T extends any>({
       ref={outerRef}
       className="dsg-container"
       onScroll={onScroll}
-      style={{ height: displayHeight }}
+      style={{ height: displayHeight, width: '100%' }}
     >
       <div
         ref={innerRef}
@@ -146,7 +148,15 @@ export const Grid = <T extends any>({
               height: headerRowHeight,
             }}
           >
-            {colVirtualizer.getVirtualItems().map((col) => (
+            {colVirtualizer.getVirtualItems().map((col) => {
+              console.log('col', col);
+
+              if(!col.start){
+                console.log('here', col)
+                return null;
+              }
+
+              return(
               <CellComponent
                 key={col.key}
                 gutter={col.index === 0}
@@ -169,7 +179,7 @@ export const Grid = <T extends any>({
                   {columns[col.index].title}
                 </div>
               </CellComponent>
-            ))}
+            )})}
           </div>
         )}
         {rowVirtualizer.getVirtualItems().map((row) => {
@@ -209,7 +219,11 @@ export const Grid = <T extends any>({
                     }))
                 const cellIsActive =
                   activeCell?.row === row.index &&
-                  activeCell.col === col.index - 1
+                  activeCell.col === col.index - 1;
+
+                  // if(!col.start){
+                  //   return null;
+                  // }
 
                 return (
                   <CellComponent

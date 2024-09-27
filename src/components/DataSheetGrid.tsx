@@ -62,6 +62,8 @@ export const DataSheetGrid = React.memo(
   React.forwardRef<DataSheetGridRef, DataSheetGridProps<any>>(
     <T extends any>(
       {
+        autoColumns = false,
+        autoRows = false,
         value: data = DEFAULT_DATA,
         className,
         style,
@@ -93,7 +95,7 @@ export const DataSheetGrid = React.memo(
     ): JSX.Element => {
       const lastEditingCellRef = useRef<Cell | null>(null)
       const disableContextMenu = disableContextMenuRaw || lockRows
-      const columns = useColumns(rawColumns, gutterColumn, stickyRightColumn)
+      const {columns, updateColumns} = useColumns(rawColumns, gutterColumn, stickyRightColumn, autoColumns)
       const hasStickyRightColumn = Boolean(stickyRightColumn)
       const innerRef = useRef<HTMLDivElement>(null)
       const outerRef = useRef<HTMLDivElement>(null)
@@ -1537,6 +1539,11 @@ export const DataSheetGrid = React.memo(
       )
       useDocumentEventListener('contextmenu', onContextMenu)
 
+      // const updateColumns = useCallback(()=> {
+      //   autoColumns = false;
+
+      // },[columns])
+
       useEffect(() => {
         const items: ContextMenuItem[] = []
 
@@ -1776,7 +1783,7 @@ export const DataSheetGrid = React.memo(
               setActiveCell({ col: 0, row: 0 })
             }}
           />
-          <DataSheetGridToolbar />
+          <DataSheetGridToolbar updateColumns={updateColumns} deleteRows={deleteRows} columns={columns} rows={data} insertRowAfter={insertRowAfter} />
           <Grid
             columns={columns}
             outerRef={outerRef}

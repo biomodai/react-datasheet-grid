@@ -1,4 +1,6 @@
-import React, { useMemo } from 'react'
+import React, { useState } from 'react'
+import { keyColumn } from '../columns/keyColumn'
+import { textColumn } from '../columns/textColumn'
 import { CellProps, Column, SimpleColumn } from '../types'
 
 const defaultComponent = () => <></>
@@ -70,77 +72,120 @@ export const parseFlexValue = (value: string | number) => {
   }
 }
 
-export const useColumns = <T extends any>(
-  columns: Partial<Column<T, any, any>>[],
-  gutterColumn?: SimpleColumn<T, any> | false,
-  stickyRightColumn?: SimpleColumn<T, any>
-): Column<T, any, any>[] => {
-  return useMemo<Column<T, any, any>[]>(() => {
-    const partialColumns: Partial<Column<T, any, any>>[] = [
-      gutterColumn === false
-        ? {
-            basis: 0,
-            grow: 0,
-            shrink: 0,
-            minWidth: 0,
-            // eslint-disable-next-line react/display-name
-            component: () => <></>,
-            headerClassName: 'dsg-hidden-cell',
-            cellClassName: 'dsg-hidden-cell',
-            isCellEmpty: cellAlwaysEmpty,
-          }
+const applyColumnDefaults = (partialColumns: any) => {
+  return partialColumns.map((column: any) => {
+    const legacyWidth =
+      column.width !== undefined
+        ? parseFlexValue(column.width)
         : {
-            ...gutterColumn,
-            basis: gutterColumn?.basis ?? 40,
-            grow: gutterColumn?.grow ?? 0,
-            shrink: gutterColumn?.shrink ?? 0,
-            minWidth: gutterColumn?.minWidth ?? 0,
-            title: gutterColumn?.title ?? (
-              <div className="dsg-corner-indicator" />
-            ),
-            component: gutterColumn?.component ?? defaultGutterComponent,
-            isCellEmpty: cellAlwaysEmpty,
-          },
-      ...columns,
-    ]
+            basis: undefined,
+            grow: undefined,
+            shrink: undefined,
+          }
 
-    if (stickyRightColumn) {
-      partialColumns.push({
-        ...stickyRightColumn,
-        basis: stickyRightColumn?.basis ?? 40,
-        grow: stickyRightColumn?.grow ?? 0,
-        shrink: stickyRightColumn?.shrink ?? 0,
-        minWidth: stickyRightColumn.minWidth ?? 0,
-        isCellEmpty: cellAlwaysEmpty,
-      })
+    return {
+      ...column,
+      basis: column.basis ?? legacyWidth.basis ?? 0,
+      grow: column.grow ?? legacyWidth.grow ?? 1,
+      shrink: column.shrink ?? legacyWidth.shrink ?? 1,
+      minWidth: column.minWidth ?? 100,
+      component: column.component ?? defaultComponent,
+      disableKeys: column.disableKeys ?? false,
+      disabled: column.disabled ?? false,
+      keepFocus: column.keepFocus ?? false,
+      deleteValue: column.deleteValue ?? identityRow,
+      copyValue: column.copyValue ?? defaultCopyValue,
+      pasteValue: column.pasteValue ?? identityRow,
+      prePasteValues: column.prePasteValues ?? defaultPrePasteValues,
+      isCellEmpty: column.isCellEmpty ?? defaultIsCellEmpty,
     }
+  })
+}
 
-    return partialColumns.map<Column<T, any, any>>((column) => {
-      const legacyWidth =
-        column.width !== undefined
-          ? parseFlexValue(column.width)
-          : {
-              basis: undefined,
-              grow: undefined,
-              shrink: undefined,
-            }
+export const generateAutoColumns = <T extends any>(count?: number) => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const columns: Partial<Column<T, any,any>>[] = new Array(count ? count : letters.length).fill(undefined).map((_, i) => ({
+    ...keyColumn<any, any>(letters[i], textColumn),
+    title: letters[i],
+    grow: 1,
+    shrink: 1,
+    basis: 0,
+  }));
 
-      return {
-        ...column,
-        basis: column.basis ?? legacyWidth.basis ?? 0,
-        grow: column.grow ?? legacyWidth.grow ?? 1,
-        shrink: column.shrink ?? legacyWidth.shrink ?? 1,
-        minWidth: column.minWidth ?? 100,
-        component: column.component ?? defaultComponent,
-        disableKeys: column.disableKeys ?? false,
-        disabled: column.disabled ?? false,
-        keepFocus: column.keepFocus ?? false,
-        deleteValue: column.deleteValue ?? identityRow,
-        copyValue: column.copyValue ?? defaultCopyValue,
-        pasteValue: column.pasteValue ?? identityRow,
-        prePasteValues: column.prePasteValues ?? defaultPrePasteValues,
-        isCellEmpty: column.isCellEmpty ?? defaultIsCellEmpty,
-      }
+  return applyColumnDefaults(columns);
+}
+
+
+const getInitialColumns = (
+  cols: Partial<Column<any, any, any>>[], 
+  gutterColumn?: SimpleColumn<any, any> | false, 
+  stickyRightColumn?:  SimpleColumn<any, any>, 
+  autoColumns?: boolean)=> {
+  const partialColumns: Partial<Column<any, any, any>>[] = [
+    gutterColumn === false
+      ? {
+          basis: 0,
+          grow: 0,
+          shrink: 0,
+          minWidth: 0,
+          // eslint-disable-next-line react/display-name
+          component: () => <></>,
+          headerClassName: 'dsg-hidden-cell',
+          cellClassName: 'dsg-hidden-cell',
+          isCellEmpty: cellAlwaysEmpty,
+        }
+      : {
+          ...gutterColumn,
+          basis: gutterColumn?.basis ?? 40,
+          grow: gutterColumn?.grow ?? 0,
+          shrink: gutterColumn?.shrink ?? 0,
+          minWidth: gutterColumn?.minWidth ?? 0,
+          title: gutterColumn?.title ?? (
+            <div className="dsg-corner-indicator" />
+          ),
+          component: gutterColumn?.component ?? defaultGutterComponent,
+          isCellEmpty: cellAlwaysEmpty,
+        },
+    ...cols,
+    ...(autoColumns ? generateAutoColumns<any>() : []),
+  ]
+
+  if (stickyRightColumn) {
+    partialColumns.push({
+      ...stickyRightColumn,
+      basis: stickyRightColumn?.basis ?? 40,
+      grow: stickyRightColumn?.grow ?? 0,
+      shrink: stickyRightColumn?.shrink ?? 0,
+      minWidth: stickyRightColumn.minWidth ?? 0,
+      isCellEmpty: cellAlwaysEmpty,
     })
-  }, [gutterColumn, stickyRightColumn, columns])
+  }
+
+  return applyColumnDefaults(partialColumns);
+}
+
+
+
+
+export const useColumns = <T extends any>(
+  cols: Partial<Column<T, any, any>>[] ,
+  gutterColumn?: SimpleColumn<T, any> | false,
+  stickyRightColumn?: SimpleColumn<T, any>,
+  autoColumns?: boolean
+) => {
+  const [columns, setColumns] = useState<Column<T, any, any>[]>(
+    getInitialColumns(cols, gutterColumn, stickyRightColumn, autoColumns));
+
+
+  const updateColumns = (newColumns: Partial<Column<T, any, any>>[]) => {
+    const updated = [
+      ...getInitialColumns([], gutterColumn, stickyRightColumn),
+      ...newColumns
+    ] as any[];
+
+    console.log('updated', updated)
+    setColumns(updated)
+  };
+
+  return {columns, updateColumns};
 }

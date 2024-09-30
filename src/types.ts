@@ -1,4 +1,5 @@
 import React from 'react'
+import { DataSheetGridToolbarProps } from './components/toolbar/DataSheetGridToolbar'
 
 export type Cell = {
   col: number
@@ -144,6 +145,8 @@ export type DataSheetGridProps<T> = {
   addRowsComponent?:
     | ((props: AddRowsComponentProps) => React.ReactElement | null)
     | false
+  toolbarComponent?:( (props: DataSheetGridToolbarProps<T>) => React.ReactElement | null )
+  enableToolbar?: boolean
   createRow?: () => T
   duplicateRow?: (opts: { rowData: T; rowIndex: number }) => T
   autoAddRow?: boolean

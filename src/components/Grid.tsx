@@ -149,10 +149,7 @@ export const Grid = <T extends any>({
             }}
           >
             {colVirtualizer.getVirtualItems().map((col) => {
-              console.log('col', col);
-
               if(!col.start){
-                console.log('here', col)
                 return null;
               }
 

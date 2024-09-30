@@ -4,7 +4,7 @@ import { Column } from '../../types';
 import TableSizeSelector from './actions/TableSizeSelector';
 
 
-interface DataSheetGridToolbarProps<T> {
+export interface DataSheetGridToolbarProps<T> {
   columns:any[];
   rows: any[];
   insertRowAfter: (row: number, count?: number) => void,

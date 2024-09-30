@@ -82,6 +82,8 @@ export const DataSheetGrid = React.memo(
         disableExpandSelection = false,
         duplicateRow = DEFAULT_DUPLICATE_ROW,
         contextMenuComponent: ContextMenuComponent = ContextMenu,
+        toolbarComponent: ToolbarComponent = DataSheetGridToolbar,
+        enableToolbar = false,
         disableContextMenu: disableContextMenuRaw = false,
         onFocus = DEFAULT_EMPTY_CALLBACK,
         onBlur = DEFAULT_EMPTY_CALLBACK,
@@ -99,6 +101,9 @@ export const DataSheetGrid = React.memo(
       const hasStickyRightColumn = Boolean(stickyRightColumn)
       const innerRef = useRef<HTMLDivElement>(null)
       const outerRef = useRef<HTMLDivElement>(null)
+
+      const outerContainerRef = useRef<HTMLDivElement>(null)
+
       const beforeTabIndexRef = useRef<HTMLDivElement>(null)
       const afterTabIndexRef = useRef<HTMLDivElement>(null)
 
@@ -110,11 +115,7 @@ export const DataSheetGrid = React.memo(
         rowHeight,
       })
 
-      // Height of the list (including scrollbars and borders) to display
-      const displayHeight = Math.min(
-        maxHeight,
-        headerRowHeight + totalSize(maxHeight) + heightDiff
-      )
+
 
       // Width and height of the scrollable area
       const { width, height } = useResizeDetector({
@@ -122,6 +123,30 @@ export const DataSheetGrid = React.memo(
         refreshMode: 'throttle',
         refreshRate: 100,
       })
+
+      const { height: parentHeight } = useResizeDetector({
+        targetRef: outerContainerRef,
+        refreshMode: 'throttle',
+        refreshRate: 100,
+      })
+
+      // Height of the list (including scrollbars and borders) to display
+      const displayHeight = useMemo(()=> {
+        if (!parentHeight) {
+          return maxHeight
+        }
+
+        // In case of autoRows = true, use the height of the parent container
+        if(autoRows){
+          return parentHeight
+        }
+
+        return Math.min(
+          maxHeight,
+          headerRowHeight + totalSize(maxHeight) + heightDiff
+        )
+      }, [totalSize, heightDiff, maxHeight, headerRowHeight, parentHeight, autoRows])
+
 
       setHeightDiff(height ? displayHeight - height : 0)
 
@@ -215,6 +240,28 @@ export const DataSheetGrid = React.memo(
 
       const getInnerBoundingClientRect = useGetBoundingClientRect(innerRef)
       const getOuterBoundingClientRect = useGetBoundingClientRect(outerRef)
+
+      // Dynamically add rows based on the container height when autoRows is true.
+      // TODO: Add new rows when the user is at the bottom of the page
+      useEffect(()=> {
+        if(!autoRows || !parentHeight || typeof rowHeight !== 'number') {
+          return;
+        }
+
+        // Add the amount of rows to fill the screen + another full page of rows
+        const additionalRows = 2 * Math.ceil((parentHeight - totalSize(maxHeight) - headerRowHeight) / rowHeight);
+
+        if(additionalRows > 0){
+          insertRowAfter(data.length - 1, additionalRows);  
+
+          setActiveCell(() => ({
+            col: 0,
+            row: 0,
+            doNotScrollX: true,
+          }))
+        }
+      
+    }, [autoRows, rowHeight, height, parentHeight,setActiveCell])
 
       // Blur any element on focusing the grid
       useEffect(() => {
@@ -1774,7 +1821,7 @@ export const DataSheetGrid = React.memo(
       ])
 
       return (
-        <div className={className} style={style}>
+        <div  className={`dsg-outer-container ${className || ''}`} style={{height: '100%', ...style}} ref={outerContainerRef}>
           <div
             ref={beforeTabIndexRef}
             tabIndex={rawColumns.length && data.length ? 0 : undefined}
@@ -1783,7 +1830,16 @@ export const DataSheetGrid = React.memo(
               setActiveCell({ col: 0, row: 0 })
             }}
           />
-          <DataSheetGridToolbar updateColumns={updateColumns} deleteRows={deleteRows} columns={columns} rows={data} insertRowAfter={insertRowAfter} />
+
+          {enableToolbar && ToolbarComponent && (          
+            <ToolbarComponent 
+            updateColumns={updateColumns} 
+            deleteRows={deleteRows} 
+            columns={columns} 
+            rows={data} 
+            insertRowAfter={insertRowAfter} />
+          )}
+
           <Grid
             columns={columns}
             outerRef={outerRef}

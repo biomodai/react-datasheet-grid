@@ -95,7 +95,6 @@ export const Grid = <T extends any>({
     horizontal: true,
     getItemKey: (index: number): React.Key => columns[index].id ?? index,
     overscan: 1,
-
     rangeExtractor: (range) => {
       const result = defaultRangeExtractor(range)
       if (result[0] !== 0) {
@@ -113,7 +112,6 @@ export const Grid = <T extends any>({
 
   useEffect(() => {
     colVirtualizer.measure();
-    console.log('measuring!', columns.length, colVirtualizer.getTotalSize())
   }, [colVirtualizer, columnWidths, columns.length])
 
   const setGivenRowData = useMemoizedIndexCallback(setRowData, 1)

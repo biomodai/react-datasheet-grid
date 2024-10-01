@@ -115,8 +115,6 @@ export const DataSheetGrid = React.memo(
         rowHeight,
       })
 
-
-
       // Width and height of the scrollable area
       const { width, height } = useResizeDetector({
         targetRef: outerRef,
@@ -251,17 +249,16 @@ export const DataSheetGrid = React.memo(
         // Add the amount of rows to fill the screen + another full page of rows
         const additionalRows = 2 * Math.ceil((parentHeight - totalSize(maxHeight) - headerRowHeight) / rowHeight);
 
-        if(additionalRows > 0){
-          insertRowAfter(data.length - 1, additionalRows);  
+        if(additionalRows > 0){          
+          insertRowAfter(data.length, additionalRows);  
 
           setActiveCell(() => ({
             col: 0,
-            row: 0,
+            row: data.length,
             doNotScrollX: true,
           }))
         }
-      
-    }, [autoRows, rowHeight, height, parentHeight,setActiveCell])
+    }, [autoRows, rowHeight, height, parentHeight,setActiveCell, data?.length])
 
       // Blur any element on focusing the grid
       useEffect(() => {

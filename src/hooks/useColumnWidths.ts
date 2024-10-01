@@ -1,5 +1,5 @@
-import { Column } from '../types'
 import { useMemo } from 'react'
+import { Column } from '../types'
 
 export const getColumnWidths = (
   containerWidth: number,
@@ -86,15 +86,52 @@ export const getColumnWidths = (
   return items.map(({ size }) => size)
 }
 
+export function measureTextWidth(text: string): number {
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+
+    if (context) {
+      context.font = '16px Inter'; 
+      const metrics = context.measureText(text);
+      return metrics.width + 22; 
+    }
+  }
+
+  const averageCharWidth = 8; 
+  return text.length * averageCharWidth + 22; 
+}
+
+
 export const useColumnWidths = (
   columns: Column<any, any, any>[],
+  rows: any[] = [],
   width?: number
 ) => {
-  const columnsHash = columns
+  const columnsWithMinWidth = columns.map((column) => {
+    let maxContentWidth = measureTextWidth(String(column.id)); // Start with header width
+
+    rows.forEach((row) => {
+      const cellContent = row[column.id!];
+      if (cellContent !== undefined && cellContent !== null) {
+        const contentWidth = measureTextWidth(String(cellContent));
+        if (contentWidth > maxContentWidth) {
+          maxContentWidth = contentWidth;
+        }
+      }
+    });
+
+    return {
+      ...column,
+      minWidth: Math.max(column.minWidth, maxContentWidth),
+    };
+  });
+
+  const columnsHash = columnsWithMinWidth
     .map(({ basis, minWidth, maxWidth, grow, shrink }) =>
       [basis, minWidth, maxWidth, grow, shrink].join(',')
     )
-    .join('|')
+    .join('|');
 
   return useMemo(() => {
     if (width === undefined) {
@@ -103,24 +140,23 @@ export const useColumnWidths = (
         columnWidths: undefined,
         columnRights: undefined,
         totalWidth: undefined,
-      }
+      };
     }
 
-    const columnWidths = getColumnWidths(width, columns)
+    const columnWidths = getColumnWidths(width, columnsWithMinWidth);
 
-    let totalWidth = 0
+    let totalWidth = 0;
 
     const columnRights = columnWidths.map((w, i) => {
-      totalWidth += w
-      return i === columnWidths.length - 1 ? Infinity : totalWidth
-    })
+      totalWidth += w;
+      return i === columnWidths.length - 1 ? Infinity : totalWidth;
+    });
 
     return {
       fullWidth: Math.abs(width - totalWidth) < 0.1,
       columnWidths,
       columnRights,
       totalWidth,
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [width, columnsHash])
-}
+    };
+  }, [width, columnsHash]);
+};

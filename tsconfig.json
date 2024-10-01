@@ -2,7 +2,7 @@
   "compilerOptions": {
     "incremental": true,
     "target": "ES2015",
-    "module": "commonjs",
+    "module": "ESNext",
     "allowJs": false,
     "jsx": "react",
     "declaration": true,

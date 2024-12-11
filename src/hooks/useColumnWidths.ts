@@ -108,22 +108,30 @@ export const useColumnWidths = (
   rows: any[] = [],
   width?: number
 ) => {
+  const defaultMaxWidth = 400;
+
   const columnsWithMinWidth = columns.map((column) => {
-    let maxContentWidth = measureTextWidth(String(column.id)); // Start with header width
+    let textContentWidth = measureTextWidth(String(column.id)); // Start with header width
 
     rows.forEach((row) => {
       const cellContent = row[column.id!];
       if (cellContent !== undefined && cellContent !== null) {
         const contentWidth = measureTextWidth(String(cellContent));
-        if (contentWidth > maxContentWidth) {
-          maxContentWidth = contentWidth;
+        
+        if (contentWidth > textContentWidth) {
+          textContentWidth = contentWidth;
         }
       }
     });
+    
+  if(textContentWidth > defaultMaxWidth){
+    textContentWidth = defaultMaxWidth;
+  }
 
     return {
       ...column,
-      minWidth: Math.max(column.minWidth, maxContentWidth),
+      minWidth: Math.max(column.minWidth, textContentWidth),
+      maxWidth: defaultMaxWidth
     };
   });
 
@@ -134,6 +142,7 @@ export const useColumnWidths = (
     .join('|');
 
   return useMemo(() => {
+    console.log('doing it')
     if (width === undefined) {
       return {
         fullWidth: false,

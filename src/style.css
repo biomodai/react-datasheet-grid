@@ -81,6 +81,19 @@
   transform: translateY(-100%);
 }
 
+.dsg-cell-resize {
+  border: 1px solid grey;
+  height: 100%;
+  cursor: w-resize !important;
+  margin: 0 auto
+
+}
+
+.dsg-cell-resize:hover {
+  cursor: col-resize!important
+}
+
+
 .dsg-cell-disabled {
   background: var(--dsg-cell-disabled-background-color);
 }
@@ -95,6 +108,7 @@
 .dsg-cell-header-container {
   padding: 0 10px;
   line-height: 15px;
+  width: 100%
 }
 
 .dsg-cell-header.dsg-cell-gutter {

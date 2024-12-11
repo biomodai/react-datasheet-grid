@@ -152,7 +152,7 @@ export const Grid = <T extends any>({
               }
 
               return(
-              <CellComponent
+                <CellComponent
                 key={col.key}
                 gutter={col.index === 0}
                 stickyRight={
@@ -169,11 +169,12 @@ export const Grid = <T extends any>({
                     'dsg-cell-header-active',
                   columns[col.index].headerClassName
                 )}
-              >
+              >    
                 <div className="dsg-cell-header-container">
                   {columns[col.index].title}
-                </div>
-              </CellComponent>
+                </div>                  
+                {/* <div className='dsg-cell-resize'></div> */}
+              </CellComponent>                
             )})}
           </div>
         )}

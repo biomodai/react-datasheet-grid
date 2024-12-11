@@ -176,13 +176,12 @@ export const useColumns = <T extends any>(
   const [columns, setColumns] = useState<Column<T, any, any>[]>(
     getInitialColumns(cols, gutterColumn, stickyRightColumn, autoColumns));
 
-
   const updateColumns = (newColumns: Partial<Column<T, any, any>>[]) => {
     const updated = [
       ...getInitialColumns([], gutterColumn, stickyRightColumn),
       ...newColumns
     ] as any[];
-
+    
     console.log('updated', updated)
     setColumns(updated)
   };
